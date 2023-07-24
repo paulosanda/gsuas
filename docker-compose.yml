@@ -1,0 +1,46 @@
+version: "3.7"
+
+services:
+  nginx:
+    image: nginx:1.17.3
+    container_name: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./webserver/nginx.conf:/etc/nginx/nginx.conf
+      - ./public:/var/www/html/public
+    depends_on:
+      - php
+    networks:
+      - mynet
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: php
+    volumes:
+      - ./src:/var/www/html/src
+      - ./tests:/var/www/html/tests
+      - ./public:/var/www/html/public
+    networks:
+      - mynet
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: 'database'
+      MYSQL_ROOT_PASSWORD: '123'
+    networks:
+      - mynet
+
+networks:
+  mynet:
+
+volumes:
+  mysql:
