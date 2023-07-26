@@ -15,3 +15,38 @@ registros já existentes através do número NIS. Caso o NIS informado já estej
 cadastrado, a aplicação deve exibir o nome do cidadão e seu numero NIS. Caso não
 esteja, deve exibir “Cidadão não encontrado”. Lembre-se de criar um README
 contendo as instruções necessárias para executarmos a aplicação.
+
+### Composer
+Rode o composer install
+
+### Docker 
+Para rodar a aplicação </br>
+<code>docker-compose up -d</code>
+
+### Banco de dados
+
+Para identificar o container do banco de dados use </br> 
+<code>docker ps</code>
+
+Verifique o ID do container do MySQL e entre: </br>
+<code>docker exec -it <id do container> bash</code>
+
+Entre no MySQL</br>
+<code>mysql -u root -p</code></br>
+O password é o 123.
+
+<code>use database</code>
+
+Para criar a tabela necessária para esta aplicação:</br>
+<code>create table persons (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50), nis VARCHAR(11));
+</code>
+
+### Para rodar os testes</br>
+<code>./vendor/bin/pest</code>
+
+
+Paulo Sanda
+Backend Engineer
+
+
+

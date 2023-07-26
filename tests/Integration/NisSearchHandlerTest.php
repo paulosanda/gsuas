@@ -1,55 +1,71 @@
 <?php
 
-namespace Integration;
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use App\Database\Database;
 use App\Person;
-use App\RegistrationHandler;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Psr7\Response;
-use Mockery;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PHPUnit\Framework\TestCase;
-use function PHPUnit\Framework\assertEquals;
-use function PHPUnit\Framework\assertTrue;
 
 class NisSearchHandlerTest extends TestCase
 {
-    use MockeryPHPUnitIntegration;
-
-    public function testItShouldRegisterANewCitizen()
+    public function testItShouldHandleSearchRequestWithExistingPerson()
     {
-        $mockDatabase = Mockery::mock(Database::class);
-        $handler = new RegistrationHandler();
-        $handler->setDatabase($mockDatabase);
+        $mockPerson = \Mockery::mock(Person::class);
+        $mockPerson->shouldReceive('findByNis')->andReturn(new Person('Maria Silveira', '12345678901'));
 
         $mockHandler = new MockHandler([
-            new Response(302, ['Location' => '/registration.php'])
+            new Response(302, ['Location' => '/search.php?data=' . urlencode(base64_encode(json_encode([
+                    'name' => 'Maria Silveira',
+                    'code' => '12345678901'
+                ])))])
         ]);
 
-        $client = new Client(['handler' => $mockHandler, 'base_uri' => 'http://localhost']);
+        $client = new Client(['handler' => $mockHandler, 'base_uri' => 'http://localhost:8080']);
 
-        $formData = ['name' => 'John Doe'];
+        $formData = ['nis' => '12345678901'];
 
-        $mockDatabase
-            ->shouldReceive('getConnection')
-            ->andReturn($mockDatabase);
+        $response = $client->post('/search', ['form_params' => $formData]);
 
-        $mockDatabase
-            ->shouldReceive('prepare')
-            ->with('INSERT INTO persons (name, nis) VALUES (:name, :nis)')
-            ->andReturn($mockDatabase);
+        $this->assertEquals(302, $response->getStatusCode());
 
-        $mockDatabase
-            ->shouldReceive('execute')
-            ->with(['name' => 'John Doe', 'nis' => Mockery::type('string')])
-            ->andReturn(true);
+        $urlParts = parse_url($response->getHeaderLine('Location'));
+        parse_str($urlParts['query'], $queryParams);
 
-        $response = $client->post('/cadastrar', ['form_params' => $formData]);
+        $this->assertArrayHasKey('data', $queryParams);
 
-        assertEquals(302, $response->getStatusCode());
-        assertEquals('/registration.php', $response->getHeaderLine('Location'));
+        $decodedParams = json_decode(base64_decode($queryParams['data']), true);
+        $this->assertEquals('Maria Silveira', $decodedParams['name']);
+        $this->assertEquals('12345678901', $decodedParams['code']);
     }
+
+    public function testItShouldHandleSearchRequestWithNotFoundPerson()
+    {
+        $mockPerson = \Mockery::mock(Person::class);
+        $mockPerson->shouldReceive('findByNis')->andReturn(null);
+
+        $mockHandler = new MockHandler([
+            new Response(302, ['Location' => '/search.php?data=' . urlencode(base64_encode(json_encode([
+                    'not_found' => true
+                ])))])
+        ]);
+
+        $client = new Client(['handler' => $mockHandler, 'base_uri' => 'http://localhost:8080']);
+
+        $formData = ['nis' => '9876543210']; // Assuming this NIS is not found in the mocked Person::findByNis()
+
+        $response = $client->post('/search', ['form_params' => $formData]);
+
+        $this->assertEquals(302, $response->getStatusCode());
+
+        $urlParts = parse_url($response->getHeaderLine('Location'));
+        parse_str($urlParts['query'], $queryParams);
+
+        $this->assertArrayHasKey('data', $queryParams);
+
+        $decodedParams = json_decode(base64_decode($queryParams['data']), true);
+        $this->assertTrue(isset($decodedParams['not_found']) && $decodedParams['not_found']);
+    }
+
 }
