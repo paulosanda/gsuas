@@ -7,8 +7,8 @@ use PDOException;
 
 class Database
 {
-    private static $instance = null;
-    private $pdo;
+    private static ?Database $instance = null;
+    private PDO $pdo;
 
     private function __construct()
     {
