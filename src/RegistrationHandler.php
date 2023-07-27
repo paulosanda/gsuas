@@ -6,10 +6,13 @@ use App\Database\Database;
 
 class RegistrationHandler
 {
+    public Person $person;
+    private Database $database;
+
     public function handleRequest(): void
     {
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
-            $name = $_POST["name"];
+            $name = trim(filter_var($_POST["name"],FILTER_SANITIZE_FULL_SPECIAL_CHARS));
             $code = $this->generateRandomCode();
 
             $validator = new Validator();
@@ -51,7 +54,7 @@ class RegistrationHandler
         $stmt->execute();
     }
 
-    public function setDatabase(Database $database)
+    public function setDatabase(Database $database): void
     {
         $this->database = $database;
     }

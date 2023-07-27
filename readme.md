@@ -44,6 +44,9 @@ Para criar a tabela necessária para esta aplicação:</br>
 ### Para rodar os testes</br>
 <code>./vendor/bin/pest</code>
 
+### Para acessar o projeto
+localhost:8080
+
 
 Paulo Sanda
 Backend Engineer

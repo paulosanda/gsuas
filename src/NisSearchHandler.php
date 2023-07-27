@@ -9,7 +9,7 @@ class NisSearchHandler
     {
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if (isset($_POST["nis"])) {
-                $nis = $_POST["nis"];
+                $nis = trim(filter_var($_POST["nis"], FILTER_SANITIZE_FULL_SPECIAL_CHARS));
 
                 $person = Person::findByNis($nis);
 
