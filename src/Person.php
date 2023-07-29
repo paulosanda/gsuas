@@ -7,8 +7,6 @@ use PDO;
 
 class Person
 {
-    public self $person;
-    
     public function __construct(private string  $name, private string $code)
     {}
 
